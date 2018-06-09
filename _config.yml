@@ -5,15 +5,15 @@
 # Site
 title: 在路上
 subtitle: stay hungry, stay foolish!
-description: blog web site for big data application, 大数据应用，人工智能，容器技术，java, go
-keywords: blog hexo bigdata ai hadoop kubernets k8s
+description: 用我的知识改变世界
+keywords: blog bigdata AI hadoop kubernets k8s docker
 author: Xiong Raorao
 language: zh-CN
 timezone: Asia/Shanghai
 
 # URL
 ## If your site is put in a subdirectory, set url as 'http://yoursite.com/child' and root as '/child/'
-url: http://xraorao.top
+url: https://xiongraorao.github.io
 root: /
 permalink: :year/:month/:day/:title/
 permalink_defaults:
