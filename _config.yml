@@ -13,7 +13,7 @@ timezone: Asia/Shanghai
 
 # URL
 ## If your site is put in a subdirectory, set url as 'http://yoursite.com/child' and root as '/child/'
-url: https://xiongraorao.github.io
+url: https://xraorao.top
 root: /
 permalink: :year/:month/:day/:title/
 permalink_defaults:
@@ -80,5 +80,8 @@ theme: next
 deploy:
 - type: git
   repo: git@github.com:xiongraorao/xiongraorao.github.io.git
+  branch: master
+- type: git
+  repo: root@xraorao.top:/root/blog.git
   branch: master
 avatar: /uploads/avatar.jpg
