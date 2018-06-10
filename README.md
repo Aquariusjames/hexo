@@ -7,6 +7,10 @@
 git clone https://github.com/xiongraorao/hexo.git
 cd hexo
 npm install -g hexo-cli
+npm install hexo --save
 npm install -f package.json
-hexo init
+
+# 下载主题
+mkdir themes
+git clone https://github.com/xiongraorao/hexo-theme-next.git themes/next
 ```
