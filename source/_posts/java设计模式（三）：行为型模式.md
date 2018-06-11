@@ -24,7 +24,7 @@ date: 2017-04-07 22:39:29
 
 第一类：通过父类与子类的关系进行实现。第二类：两个类之间。第三类：类的状态。第四类：通过中间类
 
-<div align="center"> <img src="images/design-pattern-behavior.jpg" width=""/> </div><br>
+<div align="center"> <img src="/images/design-pattern-behavior.jpg" width=""/> </div><br>
 
 ## 1. 策略模式
 
