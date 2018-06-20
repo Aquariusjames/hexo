@@ -584,9 +584,36 @@ pipeline {
 
 一款新的UI，[detail](https://jenkins.io/doc/book/blueocean)
 
+# jenkins in k8s
+
+Jenkins Server和slave节点直接有几种连接方式：ssh连接和jnlp连接。Kubernetes plugin插件用的是jnlp方式。这种方式是通过运行slave.jar，指定Jenkins Server的url参数和secret token参数，来建立连接。
+
+docker 运行jenkins slave (ssh 模式)
+这种模式docker 运行一个slave 容器跟普通物理机使用完全一致，这里不做说明。
+
+同样可以再在同一个slave节点（docker 容器）上绑定很多个工程或者任务。
+
+docker 运行jenkins slave (jnlp 模式)
+Jnlp 模式的则相对应用的比较少，jnlp 是由jenkins slave节点（物理节点，虚机或者容器均可）发起连接的，
+他 会根据配置的jenkins master的url , Jenkins连接的token和jenkins slave name( lable)来进行进行连接。
 
 
+# jenkins k8s plugins的使用
 
+## 配置
+
+安装 kubernetes plugins ，进入jenkins 系统设置，如下图所示
+
+<div align="center"> <img src="/images/jenkins/jenkins-kube-plugin.jpg" width=""/> </div><br>
+
+**注意事项：** 在使用自定义的镜像的时候，因为/home/jenkins 目录被挂载到了NFS上面，因此在镜像中保留的文件全部被清空掉，kube/config文件需要通过NFS才能挂载
+
+
+参考资料:
+
+- [Jenkins On Kubernetes---Jenkins上Kubernetes Plugin的使用](https://blog.csdn.net/felix_yujing/article/details/78725142)  
+- [初试 Jenkins 使用 Kubernetes Plugin 完成持续构建与发布](https://blog.csdn.net/aixiaoyang168/article/details/79767649)  
+- [Kubernetes集群上基于Jenkins的CI/CD流程实践](https://yq.aliyun.com/articles/180888)  
 
 
  
