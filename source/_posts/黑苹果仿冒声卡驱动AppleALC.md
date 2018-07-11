@@ -55,10 +55,25 @@ Address+Node+71+[c/d/e/f]+描述数字
 2 lineout 为f，其余0
 3 接口颜色
 4 接口为 0，表示当接口被检测到时使用。如果是笔记本的话内建的麦克风和扬声器要设成1，即当耳机插入时，内建扬声器静音，耳机0 接口被检测到就是用耳机。
-5 接口功能信息
+5 接口功能信息
 6 链接装置类型
 7 接口类型
 0为插入接口的，如外置麦克风、耳机等。
 (如果codec_dump出来有 [N/A] 的就是无用的port，数字为4。)
 9为给笔记本內建，像内置扬声器、内置麦克风等
 8 接口位置
+
+# 常见问题
+
+1. 睡眠后无法耳机没有声音
+
+解决方法: 
+- [解决耳机切换问题](https://blog.daliansky.net/Use-AppleALC-sound-card-to-drive-the-correct-posture-of-AppleHDA.html#%E8%A7%A3%E5%86%B3%E8%80%B3%E6%9C%BA%E5%88%87%E6%8D%A2-%E7%9D%A1%E7%9C%A0%E5%94%A4%E9%86%92-%E5%8E%BB%E9%99%A4%E5%BA%95%E5%99%AA%E7%AD%89%E5%B8%B8%E8%A7%81%E9%97%AE%E9%A2%98)  
+- [CodeCommander.kext](https://bitbucket.org/RehabMan/os-x-eapd-codec-commander/downloads)
+
+2. 上面不管用的情况，直接重新加载AppleHDA就可以了
+
+``` bash
+sudo kextunload /System/Library/Extensions/AppleHDA.kext
+sudo kextload /System/Library/Extensions/AppleHDA.kext
+```
