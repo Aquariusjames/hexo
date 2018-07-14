@@ -18,4 +18,8 @@ cd themes/next/
 git clone https://github.com/theme-next/theme-next-canvas-nest source/lib/canvas-nest
 git clone https://github.com/theme-next/theme-next-three source/lib/three
 git clone https://github.com/theme-next/theme-next-canvas-ribbon source/lib/canvas-ribbon
+
+## mathjax 开启公式
+[mathJax公式](https://www.cnblogs.com/Ai-heng/p/7282110.html)
+
 ```
