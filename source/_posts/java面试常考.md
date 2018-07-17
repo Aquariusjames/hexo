@@ -337,7 +337,7 @@ Survivor区是可以配置为多个的（多于两个），这样可以增加对
 
 - Minor GC: 从年轻代空间（包括 Eden 和 Survivor 区域）回收内存被称为 Minor GC, 因大多数新生对象生命周期很短，所以MinorGC通常很频繁，回收速度也较快;
 - FullGC: 针对整个新生代、老生代、元空间（metaspace，java8以上版本取代永久代(perm gen)）的全局范围的GC, 执行频率低，回收速度慢。
-- Major GC: 定义不清楚，有的地方同FullGC，有的地方指的是清理永久代。
+- Major GC: 定义不清楚，有的地方同FullGC（深入理解java虚拟机），有的地方指的是清理永久代。
 
 ### 分配策略
 
@@ -371,3 +371,245 @@ FullGC：
 a. MinorGC触发前，检查历次进入老年代的平均大小，若小于则FullGC；
 b. 如果有永久代（perm gen），在不足哆分配时，触发FullGC；
 c. 调用System.gc()，提醒JVM FullGC，但不可控；
+
+## 串行(serial)收集器和吞吐量(throughput)收集器的区别是什么？
+
+串行GC：整个扫描和复制过程均采用单线程的方式，相对于吞吐量GC来说简单；适合于单CPU、客户端级别。串行收集器在GC时会停止其他所有工作线程（stop-the-world），CPU利用率是最高的，所以适用于要求高吞吐量（throughput）的应用，但停顿时间（pause time）会比较长，所以对web应用来说就不适合，因为这意味着用户等待时间会加长。
+
+吞吐量GC：采用多线程的方式来完成垃圾收集（新生代），适合于吞吐量要求较高的场合，比较适合中等和大规模的应用程序，关注点在于达到一个可控制的吞吐量，另外吞吐量收集器有自适应调节策略的能力。采用并行收集器停顿时间很短，回收效率高，适合高频率执行。
+
+## java中，对象在什么情况下被回收？
+
+当一个对象到GC Roots不可达时，在下一个垃圾回收周期中尝试回收该对象，如果该对象重写了finalize()方法，并在这个方法中成功自救(将自身赋予某个引用)，那么这个对象不会被回收。但如果这个对象没有重写finalize()方法或者已经执行过这个方法，也自救失败，该对象将会被回收。
+
+## JVM的永久代中会发生垃圾回收么？
+
+垃圾回收不会发生在永久代，如果永久代满了或者是超过了临界值，会触发完全垃圾回收(Full GC)。如果你仔细查看垃圾收集器的输出信息，就会发现永久代也是被回收的。这就是为什么正确的永久代大小对避免Full GC是非常重要的原因。请参考下Java8：从永久代到元数据区
+(注：Java8中已经移除了永久代，新加了一个叫做元数据区的native内存区)
+
+## java中的异常
+
+java.lang.Throwable 是所有异常的超类
+
+Error: 是错误
+Exception: 是异常
+
+### 分类
+
+**1. 受检查异常**
+
+从程序角度来说，是必须经过捕捉处理的异常，要么使用try...catch,要么使用throws 语句声明抛出，否则编译通不过
+
+例如java.io.IOException
+
+**2. 不受检查异常（运行时异常，RuntimeException）**
+
+运行时发生，即时不用try...catch或者throws语句声明，会编译通过。例如java.lang.NullPointerException
+写程序的时候尽量避免
+
+### Error
+
+当程序发生不可控的错误是，通常是通知用户并终止程序的运行。例如OutOfMemoryError,动态链接失败，虚拟机错误等。
+
+## 什么是JDBC
+
+JDBC（Java DataBase Connectivity）,是一套面向对象的应用程序接口（API），制定了统一的访问各类关系数据库的标准接口，为各个数据库厂商提供了标准的实现。通过JDBC技术，开发人员可以用纯Java语言和标准的SQL语句编写完整的数据库应用程序，并且真正地实现了软件的跨平台性。
+
+通常情况下使用JDBC完成以下操作：
+1.同数据库建立连接；
+2.向数据库发送SQL语句；
+3.处理从数据库返回的结果；
+
+JDBC具有下列优点：
+1.JDBC与ODBC(Open Database Connectivity，即开放数据库互连）十分相似，便于软件开发人员理解；
+2.JDBC使软件开发人员从复杂的驱动程序编写工作中解脱出来，可以完全专注于业务逻辑开发；
+3.JDBC支持多种关系型数据库，大大增加了软件的可移植性；
+4.JDBC API是面向对象的，软件开发人员可以将常用的方法进行二次封装，从而提高代码的重用性；
+
+JDBC驱动：
+JDBC驱动提供了特定厂商对JDBC API接口类的实现，驱动必须要提供java.sql包下面这些类的实现：Connection, Statement, PreparedStatement,CallableStatement, ResultSet和Driver。
+
+一句话总结，**在使用jdbc前，应该保证相应的Driver类已经被加载到jvm中，并且完成了类的初始化工作就行了**
+
+``` java
+Class.forName("com.mysql.jdbc.Driver" ); // 初始化参数指定的类，并返回此类对应的对象
+com.mysql.jdbc.Driver driver = new com.mysql.jdbc.Driver();
+ClassLoader cl = new ClassLoader(); 
+cl.loadClass("com.mysql.jdbc.Driver" ); 
+// 以上三种方法其实都可以加载驱动
+// 加载完驱动就可以使用驱动管理器来建立链接了
+Connection con = DriverManager.getConnection(url,user,psw); 
+```
+
+## java RMI
+
+java RMI(Remote Method Invocation), java的远程方法调用是java API对远程过程调用（RPC）提供的面向对象的等价形式，能够让某个java虚拟机上的对象像调用本地对象一样调用另一个java虚拟机中对象的方法，支持直接传输序列化的java对象和分布式垃圾回收。
+
+RMI远程调用步骤：
+
+1，客户对象调用客户端辅助对象上的方法
+
+2，客户端辅助对象打包调用信息（变量，方法名），通过网络发送给服务端辅助对象
+
+3，服务端辅助对象将客户端辅助对象发送来的信息解包，找出真正被调用的方法以及该方法所在对象
+
+4，调用真正服务对象上的真正方法，并将结果返回给服务端辅助对象
+
+5，服务端辅助对象将结果打包，发送给客户端辅助对象
+
+6，客户端辅助对象将返回值解包，返回给客户对象
+
+7，客户对象获得返回值
+
+对于客户对象来说，步骤2-6是完全透明的
+
+参考文档：
+- [Java RMI详解](https://blog.csdn.net/a19881029/article/details/9465663)
+
+## RMI 体系的基本原则：
+
+RMI体系结构是基于一个非常重要的行为定义和行为实现相分离的原则。RMI允许定义行为的代码和实现行为的代码相分离，并且运行在不同的JVM上。
+
+## RMI体系结构分层
+
+存根和骨架层(Stub and Skeleton layer)：这一层对程序员是透明的，它主要负责拦截客户端发出的方法调用请求，然后把请求重定向给远程的RMI服务。
+
+远程引用层(Remote Reference Layer)：RMI体系结构的第二层用来解析客户端对服务端远程对象的引用。这一层解析并管理客户端对服务端远程对象的引用。连接是点到点的。
+
+传输层(Transport layer)：这一层负责连接参与服务的两个JVM。这一层是建立在网络上机器间的TCP/IP连接之上的。它提供了基本的连接服务，还有一些防火墙穿透策略。
+
+## 分布式垃圾回收
+
+DGC叫做分布式垃圾回收。RMI使用DGC来做自动垃圾回收。因为RMI包含了跨虚拟机的远程对象的引用，垃圾回收是很困难的。DGC使用引用计数算法来给远程对象提供自动内存管理。
+
+概念：
+	1)Java虚拟机中，一个远程对象不仅会被本地虚拟机内的变量引用，还会被远程引用。
+	2)只有当一个远程对象不受到任何本地引用和远程引用，这个远程对象才会结束生命周期。
+
+说明：
+	1)服务端的一个远程对象在3个地方被引用：
+		1>服务端的一个本地对象持有它的本地引用
+		2>服务端的远程对象已经注册到rmiregistry注册表中，也就是说，rmiregistry注册表持有它的远程引用。
+		3>客户端获得远程对象的存根对象，也就是说，客户端持有它的远程引用。
+	2)服务端判断客户端是否持有远程对象引用的方法：
+		1>当客户端获得一个服务端的远程对象的存根时，就会向服务器发送一条租约(lease)通知，以告诉服务器自己持有了这个远程对象的引用了。
+		2>客户端定期地向服务器发送租约通知，以保证服务器始终都知道客户端一直持有着远程对象的引用。
+		3>租约是有期限的，如果租约到期了，服务器则认为客户端已经不再持有远程对象的引用了。
+
+## Serializaton 和 Deserialization
+
+序列化和反序列化的对象必须实现serializable 接口，该接口没有抽象方法，只是为了标注对象可以被序列化，然后使用一个输出流就可以构造一个ObjectOutputStream(对象)，调用writeObject方法就可以将任意对象序列化输出，恢复的话则使用输出流。
+
+``` java
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
+import java.io.Serializable;
+
+/**
+ * 对象序列化测试.
+ *
+ * @author Xiong Raorao
+ * @since 2018-07-17-11:05
+ */
+public class SerializeTest {
+
+  public static void main(String[] args) throws IOException, ClassNotFoundException {
+    A a = new A();
+    a.setName("hhh");
+    ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream("D:\\oos"));
+    oos.writeObject(a);
+    oos.close();
+
+    ObjectInputStream ois = new ObjectInputStream(new FileInputStream("D:\\oos"));
+    A aa = (A) ois.readObject();
+    System.out.println(aa.getName());
+  }
+
+  static class A implements Serializable {
+
+    private String name;
+
+    public String getName() {
+      return name;
+    }
+
+    public void setName(String name) {
+      this.name = name;
+    }
+  }
+}
+
+```
+
+# Java Web
+
+## 什么是 Servlet?
+
+Servlet是用来处理客户端请求并产生动态网页内容的Java类。Servlet主要是用来处理或者是存储HTML表单提交的数据，产生动态内容，在无状态的HTTP协议下管理状态信息。
+
+### servlet的体系结构：
+
+所有的Servlet都必须要实现的核心的接口是javax.servlet.Servlet。每一个Servlet都必须要直接或者是间接实现这个接口，或者是继承javax.servlet.GenericServlet或者javax.servlet.http.HTTPServlet。最后，Servlet使用多线程可以并行的为多个请求服务。
+
+参考文档： 
+- [servlet的体系结构](http://blog.csdn.net/a236209186/article/details/51262646)
+
+### servlet的生命周期和工作原理
+
+1. 初始化阶段，调用init()方法
+2. 响应用户请求的方法，调用service()方法，自己实现doGet和doPost方法
+3. 终止阶段，调用destroy()方法
+
+![](/images/20170928102245610.png)
+
+1：Web Client向Servlet容器(tomcat)发出Http请求 
+2：Servlet容器接收Web Client的请求 
+3：Servlet容器创建一个HttpRequest对象，将Web Client请求的信息封装到这个对象中。 
+4：Servlet容器创建一个HttpResponse对象 
+5：Servlet容器调用HttpServlet对象的service方法，把HttpRequest对象与HttpResponse对象作为参数传递给HttpServlet对象。 
+6：HttpServlet调用HttpRequest对象的有关方法，获取Http请求信息 
+7：HttpServlet调用HttpResponse对象的有关方法，生成响应数据 
+8：Servlet容器把HttpServlet的响应结果传入Web Client。
+
+## HTTP响应结构
+
+http响应由三个部分组成：
+
+- 状态码(Status Code)：描述了响应的状态。可以用来检查是否成功的完成了请求。请求失败的情况下，状态码可用来找出失败的原因。如果Servlet没有返回状态码，默认会返回成功的状态码HttpServletResponse.SC_OK。
+- HTTP头部(HTTP Header)：它们包含了更多关于响应的信息。比如：头部可以指定认为响应过期的过期日期，或者是指定用来给用户安全的传输实体内容的编码格式。如何在Serlet中检索HTTP的头部看这里。
+- 主体(Body)：它包含了响应的内容。它可以包含HTML代码，图片，等等。主体是由传输在HTTP消息中紧跟在头部后面的数据字节组成的。
+
+## cookie和session
+
+cookie是web服务器发送给浏览器的一块信息。浏览器会在本地文件中给每一个web服务器存储cookie。以后浏览器在给特定的Web服务器发请求的时候，同时会发送所有为该服务器存储的cookie，例如密码填充等。
+
+seesion是存储在服务器端的信息，客户端访问服务器的时候，服务器把客户端信息已某种形式记录在服务器上。客户端浏览器再次访问服务器的时候， 服务器只需要在session中查找该用户的状态就可以了。如果说cookie机制是通过检查客户身上的“通信证”，那么session机制就是通过检查服务器上的“客户明细表”来确认客户身份。
+
+区别：
+
+- 存储位置：cookie在客户端浏览器存储，session在服务器端存储
+- 安全性：cookie安全性低，session安全性高
+- 数据量：单个cookie只能保存不大于4k的数据，且只能是string，很多浏览器一个站点最多保存20个cookie，session可以存储任意的java对象
+ 
+将登陆信息等重要信息存放为SESSION
+其他信息如果需要保留，可以放在COOKIE中
+
+## HTTP隧道
+
+HTTP隧道是一种利用HTTP或者是HTTPS把多种网络协议封装起来进行通信的技术。因此，HTTP协议扮演了一个打通用于通信的网络协议的管道的包装器的角色。把其他协议的请求掩盖成HTTP的请求就是HTTP隧道。
+
+## sendRedirect()和forward()方法有什么区别？
+
+sendRedirect()方法会创建一个新的请求，而forward()方法只是把请求转发到一个新的目标上。重定向(redirect)以后，之前请求作用域范围以内的对象就失效了，因为会产生一个新的请求，而转发(forwarding)以后，之前请求作用域范围以内的对象还是能访问的。一般认为sendRedirect()比forward()要慢。
+
+## URL编码和URL解码
+
+URL编码是负责把URL里面的空格和其他的特殊字符替换成对应的十六进制表示，反之就是解码。
+
+## JSP如何被处理的
+
+客户端通过浏览器发送jsp请求，服务器端接受到请求后，判断是否是第一次请求该页面，或者该页面是否改变，若是，服务器将jsp页面翻译为servlet，jvm将servlet编译为.class文件，字节码文件加载到服务器内存上执行，服务器将处理结果以.html页面的形式返回给客户端，若该页面不是第一次请求，则省略翻译和编译的步骤，直接执行。
+
