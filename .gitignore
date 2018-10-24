@@ -1,3 +1,4 @@
 node_modules/
 public/
 themes/landscape/
+.deploy_git/
