@@ -29,6 +29,12 @@ tags: python
     - [多线程](#多线程)
     - [ThreadLocal](#threadlocal)
     - [协程](#协程)
+- [数组](#数组)
+    - [切片](#切片)
+    - [索引](#索引)
+        - [整数索引](#整数索引)
+        - [布尔索引](#布尔索引)
+    - [副本和视图](#副本和视图)
 - [参考文档](#参考文档)
 
 <!-- /TOC -->
@@ -138,6 +144,34 @@ def person(name, age, **kw):
 items = [1,2,3]
 for i, item in enumerate(items):
     print(i, item)
+
+```
+
+python 中如何判断对象的可迭代性：
+
+``` python
+from collections import Iterable
+isinstance([], Iterable) # True
+isinstance(1, Iterable) # False
+
+```
+
+**可迭代对象的本质：**
+可迭代对象通过 ` __iter__ `⽅法向我们提供⼀个迭代器，我们在迭代⼀个可迭代对象的时候，实际上就是先获取该对象提供的⼀个迭代器，然后通过这个迭代器来依次读取对象中的每⼀个数据。那么也就是说，⼀个具备了`__iter__`⽅法的对象，就是⼀个可迭代对象。
+
+``` python 
+class    MyList(object):
+    def __init__(self):
+        self.container    =    []                
+    def add(self,    item):
+        self.container.append(item)                   
+    def __iter__(self):
+        """返回⼀个迭代器"""
+        #    我们暂时忽略如何构造⼀个迭代器对象
+        pass
+mylist = MyList()
+from collections import Iterable
+isinstance(mylist, Iterable) # True
 
 ```
 
@@ -423,6 +457,293 @@ loop.close()
 hello()会首先打印出Hello world!，然后，yield from语法可以让我们方便地调用另一个generator。由于asyncio.sleep()也是一个coroutine，所以线程不会等待asyncio.sleep()，而是直接中断并执行下一个消息循环。当asyncio.sleep()返回时，线程就可以从yield from拿到返回值（此处是None），然后接着执行下一行语句。
 
 把asyncio.sleep(1)看成是一个耗时1秒的IO操作，在此期间，主线程并未等待，而是去执行EventLoop中其他可以执行的coroutine了，因此可以实现并发执行。
+
+# 数组
+
+## 切片
+
+1. 基本切片
+
+``` python
+import numpy as np
+a = np.arange(10)
+s = slice(2,7,2)  
+print a[s] # [2  4  6]
+print a[2:7:2] # [2 4 6]
+```
+
+2. 冒号分隔的切片
+
+基本语法： `ndarrayObj[start:end:step, other dims]`
+
+- start: 开始切片的序号，默认0
+- end: 结束切片的序号, 默认为该维度最后一个
+- step: 步长，如果是负数表示从end到start方向进行遍历，默认为1
+
+`...` : 来使选择元组的长度与数组的维度相同
+
+示例：
+``` python 
+import numpy as np
+a = np.array([[1,2,3],[3,4,5],[4,5,6]])  
+print  '我们的数组是：'  
+print a
+print  '\n'  
+# 这会返回第二列元素的数组：  
+print  '第二列的元素是：'  
+print a[...,1]  
+print  '\n'  
+# 现在我们从第二行切片所有元素：  
+print  '第二行的元素是：'  
+print a[1,...]  
+print  '\n'  
+# 现在我们从第二列向后切片所有元素：
+print  '第二列及其剩余元素是：'  
+print a[...,1:]
+
+#output 
+
+我们的数组是：
+[[1 2 3]
+ [3 4 5]
+ [4 5 6]]
+
+第二列的元素是：
+[2 4 5]
+
+第二行的元素是：
+[3 4 5]
+
+第二列及其剩余元素是：
+[[2 3]
+ [4 5]
+ [5 6]]
+ 
+```
+
+## 索引
+
+### 整数索引
+
+``` python 
+import numpy as np
+x = np.arange(1,7)
+x = x.reshape(2,3)
+y = x[[0,1,2],[0,1,0]]
+print(y) 
+
+# output :
+# [1  4  5]
+
+```
+
+该结果包括数组中(0,0)，(1,1)和(2,0)位置处的元素。
+
+``` python
+
+x = np.arange(12)
+x.resize(4,3)
+print  '我们的数组是：'  
+print x 
+print  '\n' 
+rows = np.array([[0,0],[3,3]])
+cols = np.array([[0,2],[0,2]])
+y = x[rows,cols]  
+print  '这个数组的每个角处的元素是：'  
+print y
+
+# output:
+我们的数组是：                                                                 
+[[ 0  1  2]                                                                   
+ [ 3  4  5]                                                                   
+ [ 6  7  8]                                                                   
+ [ 9 10 11]]
+
+这个数组的每个角处的元素是：                                      
+[[ 0  2]                                                                      
+ [ 9 11]]
+
+```
+
+### 布尔索引
+
+当结果对象是布尔运算(例如比较运算符)的结果时，将使用此类型的高级索引。
+
+``` python 
+import numpy as np 
+x = np.array([[  0,  1,  2],[  3,  4,  5],[  6,  7,  8],[  9,  10,  11]])  
+print  '我们的数组是：'  
+print x 
+print  '\n'  
+# 现在我们会打印出大于 5 的元素  
+print  '大于 5 的元素是：'  
+print x[x >  5]
+
+# output:
+我们的数组是：
+[[ 0  1  2] 
+ [ 3  4  5] 
+ [ 6  7  8] 
+ [ 9 10 11]] 
+
+大于 5 的元素是：
+[ 6  7  8  9 10 11]
+
+```
+
+## 副本和视图
+
+在执行函数时，其中一些返回输入数组的副本，而另一些返回视图。 当内容物理存储在另一个位置时，称为`副本`。 另一方面，如果提供了相同内存内容的不同视图，我们将其称为`视图`。
+
+1. 无复制
+
+简单的赋值不会创建对象的副本,相当于C中的指针复制，两个对象拥有相同的地址，对任何一个对象进行操作都会影响到之前的对象
+
+``` python 
+
+import numpy as np 
+a = np.arange(6)  
+print  '我们的数组是：'  
+print a 
+print  '调用 id() 函数：'  
+print id(a)  
+print  'a 赋值给 b：' 
+b = a 
+print b 
+print  'b 拥有相同 id()：'  
+print id(b)  
+print  '修改 b 的形状：' 
+b.shape =  3,2  
+print b 
+print  'a 的形状也修改了：'  
+print a
+
+# output:
+我们的数组是：
+[0 1 2 3 4 5]
+
+调用 id() 函数：
+139747815479536
+
+a 赋值给 b：
+[0 1 2 3 4 5]
+b 拥有相同 id()：
+139747815479536
+
+修改 b 的形状：
+[[0 1]
+ [2 3]
+ [4 5]]
+
+a 的形状也修改了：
+[[0 1]
+ [2 3]
+ [4 5]]
+```
+
+2. 视图或浅复制
+
+两个对象拥有相同的存储地址，虽然id()函数得到的不一致，但是使用的是同一个内存空间，但是可以呈现出不同的形状
+
+``` python
+a = np.arange(6).reshape(2,3)
+b = a.view()
+print('id(a):', id(a))
+print('id(b):', id(b))
+print('a的形状')
+print(a)
+print('b的形状')
+print(b)
+b = b.reshape(3,2)
+print('reshape b 之后')
+print('a的形状')
+print(a)
+print('b的形状')
+print(b)
+b[0,0] = 10
+print('对b[0,0]进行赋值操作', ':b[0,0]=10')
+print('a的形状')
+print(a)
+print('b的形状')
+print(b)
+
+# output
+
+id(a): 1796306611056
+id(b): 1796306500144
+a的形状
+[[0 1 2]
+ [3 4 5]]
+b的形状
+[[0 1 2]
+ [3 4 5]]
+reshape b 之后
+a的形状
+[[0 1 2]
+ [3 4 5]]
+b的形状
+[[0 1]
+ [2 3]
+ [4 5]]
+对b[0,0]进行赋值操作 :b[0,0]=10
+a的形状
+[[10  1  2]
+ [ 3  4  5]]
+b的形状
+[[10  1]
+ [ 2  3]
+ [ 4  5]]
+```
+
+3. 深复制
+
+``` python
+import numpy as np 
+a = np.array([[10,10],  [2,3],  [4,5]])  
+print  '数组 a：'  
+print a 
+print  '创建 a 的深层副本：' 
+b = a.copy()  
+print  '数组 b：'  
+print b 
+# b 与 a 不共享任何内容  
+print  '我们能够写入 b 来写入 a 吗？'  
+print b is a 
+print  '修改 b 的内容：' 
+b[0,0]  =  100  
+print  '修改后的数组 b：'  
+print b 
+print  'a 保持不变：'  
+print a
+
+#output
+
+数组 a：
+[[10 10]
+ [ 2 3]
+ [ 4 5]]
+
+创建 a 的深层副本：
+数组 b：
+[[10 10]
+ [ 2 3]
+ [ 4 5]]
+我们能够写入 b 来写入 a 吗？
+False
+
+修改 b 的内容：
+修改后的数组 b：
+[[100 10]
+ [ 2 3]
+ [ 4 5]]
+
+a 保持不变：
+[[10 10]
+ [ 2 3]
+ [ 4 5]]
+
+```
+
 
 # 参考文档
 
