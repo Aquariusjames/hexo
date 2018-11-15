@@ -1,5 +1,5 @@
 ---
-layout: python
+layout: java
 title: python学习笔记
 date: 2018-10-23 11:11:20
 tags: python
