@@ -1,12 +1,12 @@
 ---
 layout: java
-title: python中的子进程
+title: python中的多进程
 date: 2018-11-14 09:53:39
 tags: python
 ---
 
 
-# 系统命令执行
+# 子进程
 
 ## os包
 
