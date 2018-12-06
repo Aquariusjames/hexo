@@ -4,15 +4,6 @@ title: python中的子进程
 date: 2018-11-14 09:53:39
 tags: python
 ---
-<!-- TOC -->
-
-- [系统命令执行](#系统命令执行)
-    - [os包](#os包)
-    - [subprocess](#subprocess)
-- [多进程](#多进程)
-    - [多进程的实现](#多进程的实现)
-
-<!-- /TOC -->
 
 
 # 系统命令执行
@@ -68,7 +59,7 @@ if __name__ == '__main__':
 
 # 多进程
 
-## 多进程的实现
+## 多进程的应用场景
 
 1. 多线程实现生产者和消费者模式（Queue）通信
 ``` python 
@@ -132,3 +123,149 @@ if __name__ == '__main__':
     p1.close()
     p2.close()
 ```
+
+## 多进程的启动
+
+1. 使用函数来启动多进程任务
+
+``` python 
+import multiprocessing
+import time
+
+def worker(interval):
+    n = 5
+    while n > 0:
+        print("The time is {0}".format(time.ctime()))
+        time.sleep(interval)
+        n -= 1
+
+if __name__ == "__main__":
+    p = multiprocessing.Process(target = worker, args = (3,))
+    p.start()
+    print "p.pid:", p.pid
+    print "p.name:", p.name
+    print "p.is_alive:", p.is_alive()
+```
+
+2. 使用类来定义多进程任务
+
+``` python
+import multiprocessing
+import time
+
+class ClockProcess(multiprocessing.Process):
+    def __init__(self, interval):
+        multiprocessing.Process.__init__(self)
+        self.interval = interval
+
+    def run(self):
+        n = 5
+        while n > 0:
+            print("the time is {0}".format(time.ctime()))
+            time.sleep(self.interval)
+            n -= 1
+
+if __name__ == '__main__':
+    p = ClockProcess(3)
+    p.start()   
+
+```
+
+3. 使用进程池来启动多进程任务
+
+``` python
+import multiprocessing
+import time
+
+def func(msg):
+    for i in xrange(3):
+        print msg
+        time.sleep(1)
+    return "done " + msg
+
+if __name__ == "__main__":
+    pool = multiprocessing.Pool(processes=4)
+    result = []
+    for i in xrange(10):
+        msg = "hello %d" %(i)
+        result.append(pool.apply_async(func, (msg, )))
+    pool.close()
+    pool.join()
+    for res in result:
+        print res.get()
+    print "Sub-process(es) done."
+```
+
+## 获取进程的返回结果
+
+1. 通过Queue让两个进程间通信
+2. 使用进程池子
+3. 通过Manager的方法来返回线程的值
+
+``` python 
+def worker(procnum, return_dict):
+    '''worker function'''
+    print str(procnum) + ' represent!'
+    return_dict[procnum] = procnum
+
+
+if __name__ == '__main__':
+    manager = Manager()
+    return_dict = manager.dict()
+    jobs = []
+    for i in range(5):
+        p = multiprocessing.Process(target=worker, args=(i,return_dict))
+        jobs.append(p)
+        p.start()
+
+    for proc in jobs:
+        proc.join()
+    print return_dict.values()
+```
+
+## 多进程的停止
+
+停止方法：process.terminate()
+
+process.join() 值为了等待子进程结束后，主进程可以继续运行，通常用于进程间的同步
+
+os.kill(pid,signal.SIGKILL) 该方法相当于kill -9，杀死进程
+
+``` python
+import time
+from multiprocessing import Process
+
+
+def run_forever():
+    while 1:
+        print(time.time())
+        time.sleep(2)
+
+
+def main():
+    p = Process(target=run_forever)
+    p.start()
+    print('start a process.')
+    time.sleep(10)
+    if p.is_alive:
+        # stop a process gracefully
+        p.terminate()
+        print('stop process')
+        p.join()
+
+
+if __name__ == '__main__':
+    main()
+    # 如果主进程不停止，子线程就无法被杀死，会出现zombie 进程
+    while True:
+      pass
+```
+
+## Damon
+
+damon 在process.start()之前使用才有效。
+process.daemon = True # 表示当主进程结束的时候，子进程也会跟着结束
+
+
+参考文档：
+- [Python 多进程编程](https://www.cnblogs.com/kaituorensheng/p/4445418.html)
