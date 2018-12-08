@@ -83,6 +83,14 @@ private Lock bankLock = new ReentrantLock();
 
 ```
 
+# Lock 和 synchronized 的选择
+
+- Lock是一个接口，而synchronized是java的关键字，synchronized是内置的语言实现
+- synchronized在发生异常的时候，会自动释放锁，不会发生死锁，而Lock在发生异常的时候，如果没有主动的去释放锁（unlock)，则会造成死锁的现象，因此Lock需要用try-catch-finally，在块中释放锁
+- Lock可以让等待锁的线程响应中断(tryLock(time))，synchronized不行，使用synchronized锁的线程会一直等待下去，不能响应中断。
+- 通过Lock可以知道有没有成功获取锁，但是synchronized无法办到
+- Lock可以提高多个线程进行读操作的效率
+
 # 参考资料
 
 - [锁和监视器之间的区别 – Java并发](https://www.cnblogs.com/keeplearnning/p/7020287.html)
